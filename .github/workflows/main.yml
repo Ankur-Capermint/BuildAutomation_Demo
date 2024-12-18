@@ -45,6 +45,10 @@ on:
           - Release
         default: Debug
 
+permissions:
+  contents: read   # Access to repository contents
+  actions: write   # Allow writing actions
+
 jobs:
   build:
     runs-on: ubuntu-latest
