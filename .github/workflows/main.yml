@@ -1,0 +1,56 @@
+name: Unity Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Unity
+        uses: actions/setup-unity@v1
+        with:
+          unity-version: '2019.4.30f1'
+
+      - name: Select branch
+        uses: actions/branch-selector@v1
+        id: branch
+        with:
+          branches: |
+            main
+            dev
+            stage
+            prod
+
+      - name: Select build platform
+        uses: actions/platform-selector@v1
+        id: platform
+        with:
+          platforms: |
+            android
+            ios
+
+      - name: Select build type
+        uses: actions/build-type-selector@v1
+        id: build-type
+        with:
+          build-types: |
+            dev
+            stage
+            prod
+
+      - name: Build Unity project
+        run: |
+          unity -batchmode -projectPath ./ -buildTarget ${platform.selected} -buildConfiguration ${build-type.selected} -branch ${branch.selected} -quit
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${platform.selected}-${build-type.selected}-${branch.selected}
+          path: ./Build/${platform.selected}/${build-type.selected}/${branch.selected}
