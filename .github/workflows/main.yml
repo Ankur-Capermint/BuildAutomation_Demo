@@ -56,12 +56,6 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch }}
 
-      # Set up Unity with the correct action
-      - name: Set up Unity
-        uses: game-ci/unity-builder@v4  # Correct Unity setup action
-        with:
-          customImage: 'unityci/editor:6000.0.30f1'  # Specify the Unity version (adjust if necessary)
-
       # Activate Unity Personal License (if required)
       - name: Activate Unity Personal License
         run: |
@@ -70,6 +64,12 @@ jobs:
           -serial "${{ secrets.UNITY_LICENSE }}" \
           -username "${{ secrets.UNITY_EMAIL }}" \
           -password "${{ secrets.UNITY_PASSWORD }}"
+
+      # Set up Unity with the correct action
+      - name: Set up Unity
+        uses: game-ci/unity-builder@v4  # Correct Unity setup action
+        with:
+          customImage: 'unityci/editor:6000.0.30f1'  # Specify the Unity version (adjust if necessary)
 
       # Build Unity project based on platform and configuration
       - name: Build Unity project
