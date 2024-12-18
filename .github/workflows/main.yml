@@ -1,121 +1,18 @@
-name: Unity Build
-
+name: Acquire activation file
 on:
-  push:
-    branches:
-      - main
-
+  workflow_dispatch: {}
 jobs:
-  build:
+  activation:
+    name: Request manual activation file 🔑
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Request manual activation file
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: game-ci/unity-request-activation-file@v2
+      # Upload artifact (Unity_v20XX.X.XXXX.alf)
+      - name: Expose as artifact
+        uses: actions/upload-artifact@v2
         with:
-          repository: 'Ankur-Capermint/BuildAutomation_Demo'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'main'
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget curl unzip
-
-      - name: Download Unity 6000.0.30f1
-        run: |
-          # Download Unity installer for 2019.4.30f1 (Linux)
-          wget https://download.unity3d.com/download_unity/0f51aefb4f1d/UnitySetup-2019.4.30f1
-
-          # Install Unity
-          chmod +x UnitySetup-2019.4.30f1
-          sudo ./UnitySetup-2019.4.30f1 --unattended --install-location /opt/Unity
-
-      - name: Set up Unity environment
-        run: |
-          echo "/opt/Unity/Editor" >> $GITHUB_PATH
-          echo "Unity environment set up."
-
-      - name: Select branch
-        id: branch
-        run: |
-          echo "Select a branch:"
-          echo "1. main"
-          echo "2. dev"
-          echo "3. stage"
-          echo "4. prod"
-          read -p "Enter the number of your choice: " branch_choice
-          case $branch_choice in
-            1) echo "Selected branch: main" && echo "::set-output name=selected::main";;
-            2) echo "Selected branch: dev" && echo "::set-output name=selected::dev";;
-            3) echo "Selected branch: stage" && echo "::set-output name=selected::stage";;
-            4) echo "Selected branch: prod" && echo "::set-output name=selected::prod";;
-            *) echo "Invalid choice" && exit 1;;
-          esac
-
-      - name: Select build platform
-        id: platform
-        run: |
-          echo "Select a build platform:"
-          echo "1. Android"
-          echo "2. iOS"
-          echo "3. Windows"
-          echo "4. macOS"
-          read -p "Enter the number of your choice: " platform_choice
-          case $platform_choice in
-            1) echo "Selected platform: Android" && echo "::set-output name=selected::android";;
-            2) echo "Selected platform: iOS" && echo "::set-output name=selected::ios";;
-            3) echo "Selected platform: Windows" && echo "::set-output name=selected::windows";;
-            4) echo "Selected platform: macOS" && echo "::set-output name=selected::macos";;
-            *) echo "Invalid choice" && exit 1;;
-          esac
-
-      - name: Select build type
-        id: build-type
-        run: |
-          echo "Select a build type:"
-          echo "1. Dev"
-          echo "2. Stage"
-          echo "3. Prod"
-          echo "4. Beta"
-          read -p "Enter the number of your choice: " build_type_choice
-          case $build_type_choice in
-            1) echo "Selected build type: Dev" && echo "::set-output name=selected::dev";;
-            2) echo "Selected build type: Stage" && echo "::set-output name=selected::stage";;
-            3) echo "Selected build type: Prod" && echo "::set-output name=selected::prod";;
-            4) echo "Selected build type: Beta" && echo "::set-output name=selected::beta";;
-            *) echo "Invalid choice" && exit 1;;
-          esac
-
-      - name: Select build architecture
-        id: architecture
-        run: |
-          echo "Select a build architecture:"
-          echo "1. x86"
-          echo "2. x64"
-          echo "3. ARM"
-          read -p "Enter the number of your choice: " architecture_choice
-          case $architecture_choice in
-            1) echo "Selected architecture: x86" && echo "::set-output name=selected::x86";;
-            2) echo "Selected architecture: x64" && echo "::set-output name=selected::x64";;
-            3) echo "Selected architecture: ARM" && echo "::set-output name=selected::arm";;
-            *) echo "Invalid choice" && exit 1;;
-          esac
-
-      - name: Select build configuration
-        id: configuration
-        run: |
-          echo "Select a build configuration:"
-          echo "1. Debug"
-          echo "2. Release"
-          read -p "Enter the number of your choice: " configuration_choice
-          case $configuration_choice in
-            1) echo "Selected configuration: Debug" && echo "::set-output name=selected::debug";;
-            2) echo "Selected configuration: Release" && echo "::set-output name=selected::release";;
-            *) echo "Invalid choice" && exit 1;;
-          esac
-
-      - name: Build Unity project
-        run: |
-          # Build the Unity project with the selected options
-          /opt/Unity/Editor/Unity -batchmode -nographics -quit -logFile unity_build.log -buildTarget ${steps.platform.outputs.selected} -projectPath ./Project -configuration ${steps.build-type.outputs.selected} -architecture ${steps.architecture.outputs.selected} -buildConfiguration ${steps.configuration.outputs.selected}
+          name: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
