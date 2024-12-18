@@ -20,29 +20,30 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget curl unzip
+          sudo apt-get install -y wget curl unzip fuse
 
-      - name: Download Unity Installer
+      - name: Install Unity Hub CLI (Headless)
         run: |
-          # Download Unity Installer
-          wget https://download.unity3d.com/download_unity/0f51aefb4f1d/UnitySetup-2019.4.30f1
+          # Download Unity Hub AppImage for Linux
+          wget https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage
 
-          # Make installer executable
-          chmod +x UnitySetup-2019.4.30f1
+          # Make the AppImage executable
+          chmod +x UnityHub.AppImage
 
-      - name: Install Unity
-        run: |
-          # Run Unity installer non-interactively (headless)
-          sudo ./UnitySetup-2019.4.30f1 --unattended --install-location /opt/Unity
+          # Move Unity Hub AppImage to /usr/local/bin for easier access
+          sudo mv UnityHub.AppImage /usr/local/bin/unityhub
+
+          # Install Unity using Unity Hub CLI (headless)
+          unityhub --headless install --version 2019.4.30f1 --modules android,ios,mac-il2cpp,windows,linux
 
       - name: Set up Unity environment
         run: |
-          # Add Unity to PATH
+          # Add Unity to the PATH for subsequent steps
           echo "/opt/Unity/Editor" >> $GITHUB_PATH
 
       - name: Install Unity modules (Android, iOS, etc.)
         run: |
-          # Install necessary Unity modules
+          # Run Unity in batch mode to install necessary modules
           /opt/Unity/Editor/Unity -batchmode -nographics -quit -createProject ./Project
           /opt/Unity/Editor/Unity -batchmode -nographics -quit -logFile unity_build.log -buildTarget Android -projectPath ./Project
 
