@@ -68,9 +68,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.branch }}
 
-      # Install Unity using the correct game-ci Unity setup action
+      # Install Unity using the latest stable version of the game-ci Unity setup action
       - name: Set up Unity
-        uses: game-ci/unity-actions/setup@v2.0.0  # Using the correct stable version
+        uses: game-ci/unity-actions/setup@v2  # Use the correct action version 'v2'
         with:
           unityVersion: '2019.4.30f1'  # Specify the Unity version you are using
 
