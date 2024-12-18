@@ -1,0 +1,89 @@
+# Unity-specific files
+
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userosscache
+*.pidb
+*.booproj
+*.svd
+
+# Unity-generated files
+
+Library/
+Temp/
+Obj/
+*.pidb.meta
+*.booproj.meta
+*.suo.meta
+*.csproj.meta
+*.unityproj.meta
+*.sln.meta
+
+# Visual Studio files
+
+.vs/
+.vscode/
+*.csproj.vs
+*.suo.vs
+*.csproj.vscode
+*.suo.vscode
+
+# Unity Editor files
+
+*.unity
+*.meta
+*.prefab
+*.scene
+*.asset
+
+# Build files
+
+Build/
+*.apk
+*.ipa
+*.exe
+*.app
+
+# Logs
+
+*.log
+*.txt
+
+# Miscellaneous
+
+.DS_Store
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+
+# Unity Package Manager files
+
+Packages/
+package-lock.json
+
+# Unity Test Tools files
+
+TestResults/
+*.testresult
+*.trx
+
+# Unity Profiler files
+
+Profiler/
+*.profiler
+*.unityprofiler
+
+# Unity Crash Reporter files
+
+CrashReporter/
+*.crash
+*.dmp
+
+# Unity Editor logs
+
+Editor/
+*.log
+*.txt
