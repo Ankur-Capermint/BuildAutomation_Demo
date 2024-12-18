@@ -62,6 +62,15 @@ jobs:
         with:
           customImage: 'unityci/editor:6000.0.30f1'  # Specify the Unity version (adjust if necessary)
 
+      # Activate Unity Personal License (if required)
+      - name: Activate Unity Personal License
+        run: |
+          echo "Activating Unity Personal License..."
+          unity-editor -batchmode -nographics -quit -logFile /dev/stdout \
+          -serial "${{ secrets.UNITY_LICENSE }}" \
+          -username "${{ secrets.UNITY_EMAIL }}" \
+          -password "${{ secrets.UNITY_PASSWORD }}"
+
       # Build Unity project based on platform and configuration
       - name: Build Unity project
         run: |
