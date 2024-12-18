@@ -22,7 +22,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wget curl unzip
 
-      - name: Download Unity 2019.4.30f1
+      - name: Download Unity 6000.0.30f1
         run: |
           # Download Unity installer for 2019.4.30f1 (Linux)
           wget https://download.unity3d.com/download_unity/0f51aefb4f1d/UnitySetup-2019.4.30f1
