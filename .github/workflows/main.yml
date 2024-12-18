@@ -20,32 +20,21 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget curl unzip fuse
+          sudo apt-get install -y wget curl unzip
 
-      - name: Install Unity Hub CLI (Headless)
+      - name: Download Unity 2019.4.30f1
         run: |
-          # Download Unity Hub AppImage for Linux
-          wget https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage
+          # Download Unity installer for 2019.4.30f1 (Linux)
+          wget https://download.unity3d.com/download_unity/0f51aefb4f1d/UnitySetup-2019.4.30f1
 
-          # Make the AppImage executable
-          chmod +x UnityHub.AppImage
-
-          # Move Unity Hub AppImage to /usr/local/bin for easier access
-          sudo mv UnityHub.AppImage /usr/local/bin/unityhub
-
-          # Install Unity using Unity Hub CLI (headless)
-          unityhub --headless install --version 2019.4.30f1 --modules android,ios,mac-il2cpp,windows,linux
+          # Install Unity
+          chmod +x UnitySetup-2019.4.30f1
+          sudo ./UnitySetup-2019.4.30f1 --unattended --install-location /opt/Unity
 
       - name: Set up Unity environment
         run: |
-          # Add Unity to the PATH for subsequent steps
           echo "/opt/Unity/Editor" >> $GITHUB_PATH
-
-      - name: Install Unity modules (Android, iOS, etc.)
-        run: |
-          # Run Unity in batch mode to install necessary modules
-          /opt/Unity/Editor/Unity -batchmode -nographics -quit -createProject ./Project
-          /opt/Unity/Editor/Unity -batchmode -nographics -quit -logFile unity_build.log -buildTarget Android -projectPath ./Project
+          echo "Unity environment set up."
 
       - name: Select branch
         id: branch
@@ -128,5 +117,5 @@ jobs:
 
       - name: Build Unity project
         run: |
-          # Run Unity build command with the selected platform, architecture, build type, etc.
+          # Build the Unity project with the selected options
           /opt/Unity/Editor/Unity -batchmode -nographics -quit -logFile unity_build.log -buildTarget ${steps.platform.outputs.selected} -projectPath ./Project -configuration ${steps.build-type.outputs.selected} -architecture ${steps.architecture.outputs.selected} -buildConfiguration ${steps.configuration.outputs.selected}
