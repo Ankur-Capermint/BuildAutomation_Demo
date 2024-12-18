@@ -13,16 +13,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          repository: 'Ankur-Capermint/BuildAutomation_Demo' # Corrected format
+          repository: 'Ankur-Capermint/BuildAutomation_Demo'
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'main'
 
+      - name: Install dependencies and FUSE
+        run: |
+          # Install necessary dependencies including FUSE for AppImage
+          sudo apt-get update
+          sudo apt-get install -y wget curl fuse
+
       - name: Install Unity Hub
         run: |
-          # Install dependencies
-          sudo apt-get update
-          sudo apt-get install -y wget curl
-          
           # Download Unity Hub Linux version
           wget https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage
 
