@@ -54,8 +54,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          repository: 'https://github.com/Ankur-Capermint/BuildAutomation_Demo.git'
-          token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.branch }}
 
       # Set up Unity with the correct action
