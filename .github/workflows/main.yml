@@ -1,90 +1,253 @@
-name: Unity Build Pipeline
+# name: Unity Build Pipeline
 
-on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Select the branch to build'
-        required: true
-        type: choice
-        options:
-          - main
-          - dev
-          - stage
-          - prod
-        default: main
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       branch:
+#         description: 'Select the branch to build'
+#         required: true
+#         type: choice
+#         options:
+#           - main
+#           - dev
+#           - stage
+#           - prod
+#         default: main
 
-      platform:
-        description: 'Select the build platform'
-        required: true
-        type: choice
-        options:
-          - Android
-          - iOS
-          - Windows
-          - macOS
-        default: Android
+#       platform:
+#         description: 'Select the build platform'
+#         required: true
+#         type: choice
+#         options:
+#           - Android
+#           - iOS
+#           - Windows
+#           - macOS
+#         default: Android
 
-      # Platform-specific choices (conditional inputs can be added manually)
-      architecture:
-        description: 'Select the build architecture'
-        required: true
-        type: choice
-        options:
-          - x86
-          - x64
-          - ARM
-        default: x86
+#       # Platform-specific choices (conditional inputs can be added manually)
+#       architecture:
+#         description: 'Select the build architecture'
+#         required: true
+#         type: choice
+#         options:
+#           - x86
+#           - x64
+#           - ARM
+#         default: x86
 
-      configuration:
-        description: 'Select the build configuration'
-        required: true
-        type: choice
-        options:
-          - Debug
-          - Release
-        default: Debug
+#       configuration:
+#         description: 'Select the build configuration'
+#         required: true
+#         type: choice
+#         options:
+#           - Debug
+#           - Release
+#         default: Debug
 
-permissions:
-  contents: read   # Access to repository contents
-  actions: write   # Allow writing actions
+# permissions:
+#   contents: read   # Access to repository contents
+#   actions: write   # Allow writing actions
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       # Checkout code from the selected branch
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+#         with:
+#           ref: ${{ github.event.inputs.branch }}
+
+#       # Activate Unity Personal License (if required)
+#       - name: Activate Unity Personal License
+#         run: |
+#           echo "Activating Unity Personal License..."
+#       - uses: game-ci/unity-test-runner@v4
+#         env:
+#           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+#           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+#           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+#         with:
+#           projectPath: ./
+#           githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+#       # Set up Unity with the correct action
+#       - name: Set up Unity
+#         uses: game-ci/unity-builder@v4  # Correct Unity setup action
+#         with:
+#           customImage: 'unityci/editor:6000.0.30f1'  # Specify the Unity version (adjust if necessary)
+
+#       # Build Unity project based on platform and configuration
+#       - name: Build Unity project
+#         run: |
+#           unity -batchmode -quit -projectPath ./ \
+#           -buildTarget ${{ github.event.inputs.platform }} \
+#           -architecture ${{ github.event.inputs.architecture }} \
+#           -buildPath ./build_output \
+#           -configuration ${{ github.event.inputs.configuration }} \
+#           -buildName "Build_${{ github.event.inputs.platform }}_${{ github.event.inputs.configuration }}"
+
+
+name: Actions 😎
+
+on: [push, pull_request]
 
 jobs:
-  build:
+  buildAndTestForLinuxBasedPlatforms:
+    name: Build for ${{ matrix.targetPlatform }}
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        projectPath:
+          - test-project
+        unityVersion:
+          - 2019.4.1f1
+          - 2020.2.1f1
+        targetPlatform:
+          - StandaloneLinux64 # Build a Linux 64-bit standalone.
+          - iOS # Build an iOS player.
+          - Android # Build an Android player.
+          - WebGL # WebGL.
     steps:
-      # Checkout code from the selected branch
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
-
-      # Activate Unity Personal License (if required)
-      - name: Activate Unity Personal License
-        run: |
-          echo "Activating Unity Personal License..."
+          fetch-depth: 0
+          lfs: true
+      - uses: actions/cache@v3
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key:
+            Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}-${{
+            hashFiles(matrix.projectPath) }}
+          restore-keys: |
+            Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}-
+            Library-${{ matrix.projectPath }}-
+            Library-
       - uses: game-ci/unity-test-runner@v4
+        id: testRunner
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          projectPath: ./
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-      # Set up Unity with the correct action
-      - name: Set up Unity
-        uses: game-ci/unity-builder@v4  # Correct Unity setup action
+      - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          customImage: 'unityci/editor:6000.0.30f1'  # Specify the Unity version (adjust if necessary)
+          name: Test results (all modes)
+          path: ${{ steps.testRunner.outputs.artifactsPath }}
+      - if: matrix.targetPlatform == 'Android'
+        uses: jlumbroso/free-disk-space@v1.2.0
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          customParameters: '-myParameter myValue -myBoolean -ThirdParameter andItsValue'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Build
+          path: build
 
-      # Build Unity project based on platform and configuration
-      - name: Build Unity project
-        run: |
-          unity -batchmode -quit -projectPath ./ \
-          -buildTarget ${{ github.event.inputs.platform }} \
-          -architecture ${{ github.event.inputs.architecture }} \
-          -buildPath ./build_output \
-          -configuration ${{ github.event.inputs.configuration }} \
-          -buildName "Build_${{ github.event.inputs.platform }}_${{ github.event.inputs.configuration }}"
+  buildForWindowsBasedPlatforms:
+    name: Build for ${{ matrix.targetPlatform }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        projectPath:
+          - test-project
+        unityVersion:
+          - 2019.4.1f1
+          - 2020.2.1f1
+        targetPlatform:
+          - StandaloneWindows # Build a Windows 32-bit standalone.
+          - StandaloneWindows64 # Build a Windows 64-bit standalone.
+          - tvOS # Build an AppleTV player.
+          - WSAPlayer # Build a UWP App.
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      - uses: actions/cache@v3
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key:
+            Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}-${{
+            hashFiles(matrix.projectPath) }}
+          restore-keys: |
+            Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}-
+            Library-${{ matrix.projectPath }}-
+            Library-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          customParameters: '-myParameter myValue -myBoolean -ThirdParameter andItsValue'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Build
+          path: build
+
+  buildForMacOSBasedPlatforms:
+    name: Build for ${{ matrix.targetPlatform }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        projectPath:
+          - test-project
+        unityVersion:
+          - 2019.4.1f1
+          - 2020.2.1f1
+        targetPlatform:
+          - StandaloneOSX # Build a macOS standalone.
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key:
+            Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}-${{
+            hashFiles(matrix.projectPath) }}
+          restore-keys: |
+            Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}-
+            Library-${{ matrix.projectPath }}-
+            Library-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          customParameters: '-myParameter myValue -myBoolean -ThirdParameter andItsValue'
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Build
+          path: build
