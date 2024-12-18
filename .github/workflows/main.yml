@@ -60,10 +60,14 @@ jobs:
       - name: Activate Unity Personal License
         run: |
           echo "Activating Unity Personal License..."
-          unity-editor -batchmode -nographics -quit -logFile /dev/stdout \
-          -serial "${{ secrets.UNITY_LICENSE }}" \
-          -username "${{ secrets.UNITY_EMAIL }}" \
-          -password "${{ secrets.UNITY_PASSWORD }}"
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: https://github.com/Ankur-Capermint/BuildAutomation_Demo.git
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
 
       # Set up Unity with the correct action
       - name: Set up Unity
