@@ -68,11 +68,20 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.branch }}
 
-      # Setup Unity
-      - name: Setup Unity
-        uses: actions/setup-unity@v1
+      # Install Unity using the game-ci Unity setup action
+      - name: Set up Unity
+        uses: game-ci/unity-actions/setup@v2
         with:
-          unity-version: '2019.4.30f1'
+          unityVersion: '2019.4.30f1'  # Specify the Unity version you are using
+
+      # Activate Unity Personal License
+      - name: Activate Unity Personal License
+        run: |
+          echo "Activating Unity Personal License..."
+          unity-editor -batchmode -nographics -quit -logFile /dev/stdout \
+          -serial "YOUR_UNITY_SERIAL_NUMBER" \
+          -username "YOUR_UNITY_USERNAME" \
+          -password "YOUR_UNITY_PASSWORD"
 
       # Build Unity project
       - name: Build Unity project
@@ -84,4 +93,3 @@ jobs:
           -configuration ${{ github.event.inputs.configuration }} \
           -architecture ${{ github.event.inputs.architecture }} \
           -buildName ${{ github.event.inputs.build_type }}
-
