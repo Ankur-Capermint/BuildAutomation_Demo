@@ -129,6 +129,13 @@ jobs:
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
+      # Commit uncommitted changes if necessary
+      - name: Commit uncommitted changes (if any)
+        run: |
+          git add .
+          git commit -m "Automated commit of uncommitted changes" || echo "No changes to commit"
+          git push origin ${{ github.ref }}
+
       # Build
       - name: Build project
         uses: game-ci/unity-builder@v4
