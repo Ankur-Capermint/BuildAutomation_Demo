@@ -17,10 +17,25 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'main'
 
-      - name: Setup Unity
-        uses: actions/setup-unity@v1
-        with:
-          unity-version: '2019.4.30f1'
+      - name: Install Unity Hub
+        run: |
+          # Install dependencies
+          sudo apt-get update
+          sudo apt-get install -y wget curl
+          
+          # Download Unity Hub Linux version
+          wget https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage
+
+          # Make it executable
+          chmod +x UnityHub.AppImage
+
+          # Move it to /usr/local/bin for global access
+          sudo mv UnityHub.AppImage /usr/local/bin/unityhub
+
+      - name: Install Unity version
+        run: |
+          # Install Unity via Unity Hub
+          unityhub -- --headless install --version 2019.4.30f1 --modules android,ios,mac-il2cpp,windows,linux
 
       - name: Select branch
         id: branch
@@ -103,4 +118,5 @@ jobs:
 
       - name: Build Unity project
         run: |
-          unity -batchmode -projectPath ./ -buildTarget ${steps.platform.outputs.selected} -buildConfiguration ${steps.build-type.outputs.selected} -buildArchitecture ${steps.architecture.outputs.selected} -configuration ${steps.configuration.outputs.selected} -quit
+          # Run Unity build command with the selected platform, architecture, build type, etc.
+          unityhub -- --headless build --projectPath ./ --target ${steps.platform.outputs.selected} --configuration ${steps.build-type.outputs.selected} --architecture ${steps.architecture.outputs.selected} --buildConfiguration ${steps.configuration.outputs.selected} --quit
