@@ -17,27 +17,34 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: 'main'
 
-      - name: Install dependencies and FUSE
+      - name: Install dependencies
         run: |
-          # Install necessary dependencies including FUSE for AppImage
           sudo apt-get update
-          sudo apt-get install -y wget curl fuse
+          sudo apt-get install -y wget curl unzip
 
-      - name: Install Unity Hub
+      - name: Download Unity Installer
         run: |
-          # Download Unity Hub Linux version
-          wget https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage
+          # Download Unity Installer
+          wget https://download.unity3d.com/download_unity/0f51aefb4f1d/UnitySetup-2019.4.30f1
 
-          # Make it executable
-          chmod +x UnityHub.AppImage
+          # Make installer executable
+          chmod +x UnitySetup-2019.4.30f1
 
-          # Move it to /usr/local/bin for global access
-          sudo mv UnityHub.AppImage /usr/local/bin/unityhub
-
-      - name: Install Unity version
+      - name: Install Unity
         run: |
-          # Install Unity via Unity Hub
-          unityhub -- --headless install --version 2019.4.30f1 --modules android,ios,mac-il2cpp,windows,linux
+          # Run Unity installer non-interactively (headless)
+          sudo ./UnitySetup-2019.4.30f1 --unattended --install-location /opt/Unity
+
+      - name: Set up Unity environment
+        run: |
+          # Add Unity to PATH
+          echo "/opt/Unity/Editor" >> $GITHUB_PATH
+
+      - name: Install Unity modules (Android, iOS, etc.)
+        run: |
+          # Install necessary Unity modules
+          /opt/Unity/Editor/Unity -batchmode -nographics -quit -createProject ./Project
+          /opt/Unity/Editor/Unity -batchmode -nographics -quit -logFile unity_build.log -buildTarget Android -projectPath ./Project
 
       - name: Select branch
         id: branch
@@ -121,4 +128,4 @@ jobs:
       - name: Build Unity project
         run: |
           # Run Unity build command with the selected platform, architecture, build type, etc.
-          unityhub -- --headless build --projectPath ./ --target ${steps.platform.outputs.selected} --configuration ${steps.build-type.outputs.selected} --architecture ${steps.architecture.outputs.selected} --buildConfiguration ${steps.configuration.outputs.selected} --quit
+          /opt/Unity/Editor/Unity -batchmode -nographics -quit -logFile unity_build.log -buildTarget ${steps.platform.outputs.selected} -projectPath ./Project -configuration ${steps.build-type.outputs.selected} -architecture ${steps.architecture.outputs.selected} -buildConfiguration ${steps.configuration.outputs.selected}
