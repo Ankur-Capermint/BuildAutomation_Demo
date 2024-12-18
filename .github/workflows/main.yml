@@ -25,17 +25,7 @@ on:
           - macOS
         default: Android
 
-      build_type:
-        description: 'Select the build type'
-        required: true
-        type: choice
-        options:
-          - Dev
-          - Stage
-          - Prod
-          - Beta
-        default: Dev
-
+      # Platform-specific choices (conditional inputs can be added manually)
       architecture:
         description: 'Select the build architecture'
         required: true
@@ -64,32 +54,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          repository: 'https://github.com/Ankur-Capermint/BuildAutomation_Demo.git'
-          token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.branch }}
 
-      # Install Unity using the latest stable version of the game-ci Unity setup action
+      # Install Unity
       - name: Set up Unity
-        uses: game-ci/unity-actions/setup@v2  # Use the correct action version 'v2'
+        uses: game-ci/unity-actions/setup@v2
         with:
-          unityVersion: '6000.0.30f1'  # Specify the Unity version you are using
+          unityVersion: '2019.4.30f1'
 
-      # Activate Unity Personal License
-      - name: Activate Unity Personal License
-        run: |
-          echo "Activating Unity Personal License..."
-          unity-editor -batchmode -nographics -quit -logFile /dev/stdout \
-          -serial "${{ secrets.UNITY_SERIAL_NUMBER }}" \
-          -username "${{ secrets.UNITY_USERNAME }}" \
-          -password "${{ secrets.UNITY_PASSWORD }}"
-
-      # Build Unity project
+      # Build Unity project based on platform and configuration
       - name: Build Unity project
         run: |
           unity -batchmode -quit -projectPath ./ \
           -buildTarget ${{ github.event.inputs.platform }} \
-          -customBuildTarget ${{ github.event.inputs.platform }} \
+          -architecture ${{ github.event.inputs.architecture }} \
           -buildPath ./build_output \
           -configuration ${{ github.event.inputs.configuration }} \
-          -architecture ${{ github.event.inputs.architecture }} \
-          -buildName ${{ github.event.inputs.build_type }}
+          -buildName "Build_${{ github.event.inputs.platform }}_${{ github.event.inputs.configuration }}"
