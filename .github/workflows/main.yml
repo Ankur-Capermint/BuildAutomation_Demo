@@ -94,6 +94,12 @@ name: Actions 😎
 
 on: [push, pull_request]
 
+permissions:
+  contents: write  # Allow read and write access to repository contents
+  actions: write   # Allow writing actions (like posting test results)
+  checks: write    # Allow interacting with check results (post results)
+  issues: write    # Allow posting results as GitHub issues or comments
+
 jobs:
   build:
     name: Build my project ✨
