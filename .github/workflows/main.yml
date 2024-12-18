@@ -58,11 +58,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.branch }}
 
-      # Install Unity
+      # Set up Unity with the correct action
       - name: Set up Unity
-        uses: actions/setup-unity@v1
+        uses: game-ci/unity-actions/setup@v2  # Correct Unity setup action
         with:
-          unityVersion: '6000.0.30f1'
+          unityVersion: '6000.0.30f1'  # Specify the Unity version (adjust if necessary)
 
       # Build Unity project based on platform and configuration
       - name: Build Unity project
