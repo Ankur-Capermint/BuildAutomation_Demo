@@ -1,58 +1,87 @@
-name: GameCI Template 🎮
+name: Unity Build Pipeline
 
-on: push
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Select the branch to build'
+        required: true
+        type: choice
+        options:
+          - main
+          - dev
+          - stage
+          - prod
+        default: main
 
-env:
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      platform:
+        description: 'Select the build platform'
+        required: true
+        type: choice
+        options:
+          - Android
+          - iOS
+          - Windows
+          - macOS
+        default: Android
+
+      build_type:
+        description: 'Select the build type'
+        required: true
+        type: choice
+        options:
+          - Dev
+          - Stage
+          - Prod
+          - Beta
+        default: Dev
+
+      architecture:
+        description: 'Select the build architecture'
+        required: true
+        type: choice
+        options:
+          - x86
+          - x64
+          - ARM
+        default: x86
+
+      configuration:
+        description: 'Select the build configuration'
+        required: true
+        type: choice
+        options:
+          - Debug
+          - Release
+        default: Debug
 
 jobs:
-  checkLicense:
-    name: Check for the Unity license ☑️
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Fail - No license ☠️
-        if: ${{ !startsWith(env.UNITY_LICENSE, '<') }}
-        run: exit 1
 
-  testRunner:
-    needs: checkLicense
-    name: Test all modes 📝
-    runs-on: ubuntu-latest
     steps:
+      # Checkout code from the selected branch
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Create LFS file list
-        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
-
-      - name: Restore LFS cache
-        uses: actions/cache@v2
-        id: lfs-cache
         with:
-          path: .git/lfs
-          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+          repository: 'https://github.com/YourOrg/YourRepo.git'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.inputs.branch }}
 
-      - name: Git LFS Pull
+      # Setup Unity
+      - name: Setup Unity
+        uses: actions/setup-unity@v1
+        with:
+          unity-version: '2019.4.30f1'
+
+      # Build Unity project
+      - name: Build Unity project
         run: |
-          git lfs pull
-          git add .
-          git reset --hard
+          unity -batchmode -quit -projectPath ./ \
+          -buildTarget ${{ github.event.inputs.platform }} \
+          -customBuildTarget ${{ github.event.inputs.platform }} \
+          -buildPath ./build_output \
+          -configuration ${{ github.event.inputs.configuration }} \
+          -architecture ${{ github.event.inputs.architecture }} \
+          -buildName ${{ github.event.inputs.build_type }}
 
-      - name: Restore Library cache
-        uses: actions/cache@v2
-        with:
-          path: Library
-          key: Library-test-project
-          restore-keys: |
-            Library-test-project-
-            Library-
-
-      - uses: game-ci/unity-test-runner@v2
-        id: testRunner
-        with:
-          testMode: all
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Test results (all modes)
-          path: ${{ steps.testRunner.outputs.artifactsPath }}
